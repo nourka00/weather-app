@@ -38,24 +38,31 @@ const WeatherApp = () => {
       setError('Please select a city.');
       return;
     }
-
+  
     try {
       const response = await axios.get(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&cnt=7&appid=${apiKey}&units=metric`
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`
       );
-      setForecast(response.data);
+      const filteredForecast = response.data.list.filter((item, index, self) => {
+        // Extract unique days by comparing dates
+        const currentDate = new Date(item.dt_txt).toDateString();
+        return self.findIndex(f => new Date(f.dt_txt).toDateString() === currentDate) === index;
+      });
+      setForecast({ ...response.data, list: filteredForecast });
       setError(null);
     } catch (err) {
       setError('Could not fetch weather data. Please try again.');
       setForecast(null);
     }
   };
+ 
 
   const getDayOfWeek = (dateString) => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const date = new Date(dateString);
-    return daysOfWeek[date.getDay()];
+    return daysOfWeek[date.getDay()] || 'Unknown';
   };
+  
 
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
